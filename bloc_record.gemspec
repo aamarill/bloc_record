@@ -4,6 +4,7 @@ Gem::Specification.new do |s|
   s.date = '2018-02-26'
   s.summary = 'BlocRecord ORM'
   s.description = 'An ActiveRecord-esque ORM adaptor'
+  s.authors = ['Adan Amarillas']
   s.email = 'aamarill.engr@gmail.com'
   s.files = Dir['lib/**/*.rb']
   s.require_paths = ["lib"]
