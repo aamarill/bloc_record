@@ -1,4 +1,4 @@
-GEM::Specification.new do |s|
+Gem::Specification.new do |s|
   s.name = 'bloc_record'
   s.version = '0.0.0'
   s.date = '2018-02-26'
