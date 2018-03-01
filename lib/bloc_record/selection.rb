@@ -136,6 +136,16 @@ module Selection
           SELECT * FROM #{table}
           INNER JOIN #{args.first} ON #{args.first}.#{table}_id = #{table}.id
         SQL
+      when Hash
+        hash = args.first
+        key = hash.keys.to_s
+        value = hash[key].to_s
+        join1 = "INNER JOIN #{key} ON #{key}.#{table}_id = #{table}.id"
+        join2 = "INNER JOIN #{value} ON #{value}.#{key}_id = #{key}.id"
+        joins = join1 + join2
+        rows = connection.execute <<-SQL
+          SELECT * FROM #{table} #{joins}
+        SQL
       end
     end
 
