@@ -105,6 +105,29 @@ module Selection
      rows_to_array(rows)
    end
 
+   def not(*args)
+      if args.count > 1
+        expression = args.shift
+        params = args
+      else
+        case args.first
+        when String
+          expression = args.first
+        when Hash
+          expression_hash = BlocRecord::Utility.convert_keys(args.first)
+          expression = expression_hash.map {|key, value| "#{key}!=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+        end
+      end
+
+      sql = <<-SQL
+        SELECT #{columns.join ","} FROM #{table}
+        WHERE #{expression};
+      SQL
+
+      rows = connection.execute(sql, params)
+      rows_to_array(rows)
+    end
+
   def order(*args)
     if args.count > 1
       order = args.join(",")
