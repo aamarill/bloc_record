@@ -17,25 +17,28 @@ module Persistence
       return true
     end
 
-
     fields = self.class.attributes.map { |col| "#{col}=#{BlocRecord::Utility.sql_strings(self.instance_variable_get("@#{col}"))}" }.join(",")
 
-     self.class.connection.execute <<-SQL
-       UPDATE #{self.class.table}
-       SET #{fields}
-       WHERE id = #{self.id};
-     SQL
+    self.class.connection.execute <<-SQL
+      UPDATE #{self.class.table}
+      SET #{fields}
+      WHERE id = #{self.id};
+    SQL
 
-     true
-   end
+    true
+  end
 
-   def update_attribute(attribute, value)
-     self.class.update(self.id, { attribute => value })
-   end
+  def update_attribute(attribute, value)
+    self.class.update(self.id, { attribute => value })
+  end
 
-   def update_attributes(updates)
-     self.class.update(self.id, updates)
-   end
+  def update_attributes(updates)
+    self.class.update(self.id, updates)
+  end
+
+  def destroy
+    self.class.destroy(self.id)
+  end
 
   module ClassMethods
     def update_all
@@ -74,6 +77,38 @@ module Persistence
         UPDATE #{table}
         SET #{updates_array * ","} #{where_clause}
       SQL
+
+      true
+    end
+
+    def destroy(*id)
+      if id.length > 1
+        where_clause = "WHERE id IN (#{id.join(",")});"
+      else
+        where_clause = "WHERE id = #{id.first};"
+      end
+
+      connection.execute <<-SQL
+        DELETE FROM #{table} #{where_clause}
+      SQL
+
+      true
+    end
+
+    def destroy_all(conditions_hash=nil)
+      if conditions_hash && !conditions_hash.empty?
+        conditions_hash = BlocRecord::Utility.convert_keys(conditions_hash)
+        conditions = conditions_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+
+        connection.execute <<-SQL
+          DELETE FROM #{table}
+          WHERE #{conditions}
+        SQL
+      else
+        connection.execute <<-SQL
+          DELETE FROM #{table}
+        SQL
+      end
 
       true
     end
