@@ -96,31 +96,37 @@ module Persistence
     end
 
     def destroy_all(*conditions)
-      conditions
+
       case conditions.first
       when String
-        if conditions.length > 1
-          # Answer to question #3
+        if conditions.length == 1
+          where_clause = "WHERE #{conditions.first};"
         else
-          # Answer to question #2
+          number_of_pairs = conditions.length / 2
+          combined_conditions = []
+
+          number_of_pairs.times do |index|
+            combined_conditions << conditions[index].sub('?',conditions[index + 1])
+          end
+
+          conditions = combined_conditions.join(" and ")
+          where_clause = "WHERE #{conditions};"
         end
 
-      when Hash
+      when Hash && !conditions_hash.empty?
         conditions_hash = conditions.first
-        if conditions_hash && !conditions_hash.empty?
-          conditions_hash = BlocRecord::Utility.convert_keys(conditions_hash)
-          conditions = conditions_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+        conditions_hash = BlocRecord::Utility.convert_keys(conditions_hash)
+        conditions = conditions_hash.map {|key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}"}.join(" and ")
+        where_clause = "WHERE #{conditions};"
 
-          connection.execute <<-SQL
-            DELETE FROM #{table}
-            WHERE #{conditions}
-          SQL
-        else
-          connection.execute <<-SQL
-            DELETE FROM #{table}
-          SQL
-        end
+      else
+        where_clause = ";"
       end
+
+      connection.execute <<-SQL
+        DELETE FROM #{table}
+        #{where_clause}
+      SQL
 
       true
     end
